@@ -1,1 +1,1 @@
-Template for packages developed at CCN, Flatiron
+Neuroposelib documentation

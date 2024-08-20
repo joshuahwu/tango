@@ -1,4 +1,4 @@
-site_name: ccn-template
+site_name: neuroposelib
 repo_url: https://github.com/joshuahwu/neuroposelib
 
 theme:
@@ -22,21 +22,21 @@ plugins:
             - docs/gen_ref_pages.py     # script for generating reference pages
     - literate-nav:
           nav_file: docs/SUMMARY.md     # navigation file for literate navigation
-    - section-index                    # plugin for creating section index
-    - gallery:
-        examples_dirs: docs/examples          # path to your example scripts
-        gallery_dirs: docs/generated/gallery  # where to save generated gallery
+    # - section-index                    # plugin for creating section index
+    # - gallery:
+    #     examples_dirs: docs/examples          # path to your example scripts
+    #     gallery_dirs: docs/generated/gallery  # where to save generated gallery
 nav:
     - Home: index.md
-    - Tutorials: generated/gallery
-    - Workflow: notes/00-workflow.md
-    - Structure: notes/01-structure.md
-    - Packaging: notes/02-packaging.md
-    - Documentation: notes/03-documentation.md
-    - Docstrings: notes/04-docstrings.md
-    - Linters and Tests: notes/05-linters-and-tests.md
-    - CI: notes/06-ci.md
-    - Data: notes/07-data.md
-    - Open Source: notes/08-open-source.md
-    - Code References: reference/
-    - About: about.md
+    - API References: reference/
+    # - Tutorials: generated/gallery
+    # - Workflow: notes/00-workflow.md
+    # - Structure: notes/01-structure.md
+    # - Packaging: notes/02-packaging.md
+    # - Documentation: notes/03-documentation.md
+    # - Docstrings: notes/04-docstrings.md
+    # - Linters and Tests: notes/05-linters-and-tests.md
+    # - CI: notes/06-ci.md
+    # - Data: notes/07-data.md
+    # - Open Source: notes/08-open-source.md
+    # - About: about.md

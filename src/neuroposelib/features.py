@@ -304,7 +304,7 @@ def wavelet(
             )[0]
         )
 
-        wlet_feats[ids == i] = np.swapaxes(wlets_i_f.T, 0, 1).reshape(
+        wlet_feats[ids == i] = np.swapaxes(wlets_i_f, 0, 1).reshape(
             wlets_i_f.shape[1], -1
         )
 

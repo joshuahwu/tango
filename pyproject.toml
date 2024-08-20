@@ -23,12 +23,29 @@ dependencies = []
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
-# [project.optional-dependencies]
-# docs = [
-#     "mkdocs",
-#     "mkdocstrings[python]",
-#     "mkdocs_section_index",
-#     "mkdocs_gen_files",
-#     "mkdocs_literate_nav",
-#     "mkdocs-gallery",
-# ]
+[project.optional-dependencies]
+docs = [
+    "mkdocs",
+    "mkdocstrings[python]",
+    "mkdocs_section_index",
+    "mkdocs_gen_files",
+    "mkdocs_literate_nav",
+    "mkdocs-gallery",
+]
+
+[tool.setuptools_scm]
+write_to = "src/ccn_template/version.py"
+version_scheme = 'python-simplified-semver'
+local_scheme = 'no-local-version'
+
+[tool.black]
+exclude = '/version\.py$'
+
+[tool.coverage.report]
+exclude_lines = [
+    "if __name__ == .__main__.:"    # Exclude from coverage
+]
+
+[tool.pydocstyle]
+convention = "numpy"                   # Convention for linting (numpy, google, pep257)
+match = "^(?!version\\.py$).*\\.py$"   # This matches everything that ends with .py, except for version.py
