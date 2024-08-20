@@ -208,7 +208,7 @@ def median_filter(pose: np.ndarray, id: Union[np.ndarray, List], filter_len: int
     print("Applying Median Filter")
     for _, i in enumerate(tqdm(np.unique(id))):
         pose_exp = pose[id == i, ...]
-        pose[id == i, ...] = scp_ndi.median_filter(pose_exp, (filter_len, 1, 1))
+        pose[id == i, ...] = scp_ndi.median_filter(pose_exp, (filter_len, 1, 1),mode="nearest")
 
     return pose
 

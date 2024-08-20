@@ -4,7 +4,7 @@ import numpy as np
 from typing import Optional, Union, List, Tuple, Type
 from tqdm import tqdm
 from neuroposelib.utils import by_id, rolling_window, get_frame_diff
-
+import pywt
 
 def get_lengths(pose: np.ndarray, links: np.ndarray):
     """
@@ -94,9 +94,9 @@ def get_velocities(
             for j, width in enumerate(widths):
                 # if i==49:
                 #     import pdb; pdb.set_trace()
-                vel_stds[
-                    ids == i, j * len(joints) * 4 : (j + 1) * len(joints) * 4
-                ] = np.std(rolling_window(dv, 2 * width + 1), axis=-1)
+                vel_stds[ids == i, j * len(joints) * 4 : (j + 1) * len(joints) * 4] = (
+                    np.std(rolling_window(dv, 2 * width + 1), axis=-1)
+                )
 
                 if i == np.unique(ids)[0]:
                     std_labels += [
@@ -271,18 +271,17 @@ def get_head_angular(
 
     return angular_vel
 
-
 def wavelet(
     features: np.ndarray,
     labels: List[str],
     ids: Union[np.ndarray, List],
     f_s: int = 90,
-    freq: Union[List, np.ndarray] = np.linspace(1, 25, 25),
-    w0: float = 5,
+    freq: Union[List, np.ndarray] = np.geomspace(1, 25, 25),
+    bw: float = 1.0,
 ):
-    # scp.signal.morlet2(500, )
+
     print("Calculating wavelets ... ")
-    widths = (w0 * f_s / (2 * freq * np.pi)).astype(features.dtype)
+    # widths = (w0 * f_s / (2 * freq * np.pi)).astype(features.dtype)
     wlet_feats = np.zeros(
         (features.shape[0], len(freq) * features.shape[1]), features.dtype
     )
@@ -293,10 +292,22 @@ def wavelet(
 
     for i in np.unique(ids):
         print("Calculating wavelets for video " + str(i))
-        for j in tqdm(range(features.shape[1])):
-            wlet_feats[ids == i, j * len(freq) : (j + 1) * len(freq)] = np.abs(
-                cwt(features[ids == i, j], morlet2, widths, w=w0).T
-            )
+        wlets_i_f = np.abs(
+            pywt.cwt(
+                features[ids == i],
+                scales=pywt.frequency2scale("cmor{:.1f}-{:.1f}".format(bw, 1.0), freq)
+                * f_s,
+                wavelet="cmor{:.1f}-{:.1f}".format(bw, 1.0),
+                sampling_period=1 / f_s,
+                method="fft",
+                axis=0,
+            )[0]
+        )
+
+        wlet_feats[ids == i] = np.swapaxes(wlets_i_f.T, 0, 1).reshape(
+            wlets_i_f.shape[1], -1
+        )
+
     return wlet_feats, wlet_labels
 
 
@@ -305,11 +316,10 @@ def pca(
     labels: List,
     categories: List[str] = ["vel", "ego_euc", "ang", "avel"],
     n_pcs: int = 10,
-    downsample: int = 1,
+    max_frames: int = 2e7,
     method="fbpca",
 ):
     print("Calculating principal components ... ")
-
     # Initializing the PCA method
     # if method.startswith("torch"):
     #     import torch
@@ -319,6 +329,7 @@ def pca(
     # else:
     # Centering the features if not torch (pytorch does it itself)
     features = features - features.mean(axis=0)
+    features /= features.std(axis=0) + 1e-8
     pca_feats = np.zeros(
         (features.shape[0], len(categories) * n_pcs), dtype=features.dtype
     )
@@ -369,6 +380,8 @@ def pca(
         #         )
 
         elif method == "fbpca":
+            downsample = int(np.ceil(len(features) / max_frames))
+            assert downsample > 0
             (_, _, V) = fbpca.pca(
                 features[::downsample, cols_idx].astype(np.float64), k=n_pcs
             )

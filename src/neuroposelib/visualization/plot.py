@@ -10,11 +10,13 @@ from pathlib import Path
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from typing import Optional, Union, List
+from scipy.special import softmax
 
 from neuroposelib import DataStruct as ds
 from neuroposelib.embed import Watershed, GaussDensity
 from neuroposelib.analysis import cluster_freq_by_cat
 from neuroposelib.visualization.constants import PALETTE, EPS, DEFAULT_VIRIDIS
+
 
 def scatter_by_cat(
     data: np.ndarray,
@@ -208,12 +210,16 @@ def density(
     ws_borders: Optional[np.ndarray] = None,
     filepath: str = "./results/density.png",
     show: bool = False,
+    vmax: float = 3.5,
 ):
+    vmin = 0.99 * 15/density.shape[0]**2
     f = plt.figure()
     ax = f.add_subplot(111)
     if ws_borders is not None:
         ax.plot(ws_borders[:, 0], ws_borders[:, 1], ".k", markersize=0.1)
-    ax.imshow(density, vmin=EPS, cmap=DEFAULT_VIRIDIS)
+
+    # import pdb; pdb.set_trace()
+    ax.imshow(density, vmin=vmin, vmax=vmax, cmap=DEFAULT_VIRIDIS)
     ax.set_xticks([])
     ax.set_yticks([])
     ax.set_aspect(0.9)
@@ -231,13 +237,13 @@ def _mask_density(density, watershed_map, eps: float = EPS * 1.01):
     density[~mask] = 0
     return density
 
-
 def density_cat(
     data: ds.DataStruct,
     column: str,
     watershed: Watershed,
     filepath: str = "./results/density_by_label.png",
     show: bool = False,
+    vmax: float = 3.5,
 ):
     """
     Plot densities by a category label
@@ -261,6 +267,7 @@ def density_cat(
         ax.imshow(
             _mask_density(density, watershed.watershed_map, EPS * 1.01),
             vmin=EPS,
+            vmax=vmax,
             cmap=DEFAULT_VIRIDIS,
         )  # scp.special.softmax(density))
 
@@ -293,6 +300,7 @@ def density_grid(
     watershed: Watershed,
     filepath: str = "./results/density_by_label.png",
     show: bool = False,
+    vmax: float = 3.5,
 ):
     """
     Plot densities by a category label
@@ -315,11 +323,11 @@ def density_grid(
                 embed_vals, new=False
             )  # Fit density on old axes
             idx = i * len(np.unique(labels2)) + j
-
             # if n_rows == 1:
             ax_arr[idx].imshow(
                 _mask_density(density, watershed.watershed_map, EPS * 1.01),
                 vmin=EPS,
+                vmax=vmax,
                 cmap=DEFAULT_VIRIDIS,
             )
 

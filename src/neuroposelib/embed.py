@@ -478,7 +478,7 @@ class GaussDensity:
             data[:, 1],
             bins=[self.n_bins, self.n_bins],
             range=self.hist_range,
-            density=False,
+            density=True,
         )
         hist = np.rot90(hist)
 
@@ -559,7 +559,6 @@ class GaussDensity:
 
 
 class Watershed(GaussDensity):
-    density_thresh = 1e-3
 
     def __init__(
         self,
@@ -568,6 +567,7 @@ class Watershed(GaussDensity):
         max_clip: float = 0.75,
         log_out: bool = False,
         pad_factor: float = 0.025,
+        density_thresh: float = 17,
     ):
         super().__init__(
             sigma=sigma,
@@ -576,6 +576,7 @@ class Watershed(GaussDensity):
             log_out=log_out,
             pad_factor=pad_factor,
         )
+        self.density_thresh = density_thresh / (n_bins**2)
 
         self.watershed_map = None
         self.borders = None
