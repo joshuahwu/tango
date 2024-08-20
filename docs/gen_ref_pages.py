@@ -24,9 +24,10 @@ for path in sorted(Path("src").rglob("*.py")):
 
     parts = tuple(module_path.parts)
     if parts[-1] == "__init__":
-        parts = parts[:-1]
-        doc_path = doc_path.with_name("index.md")
-        full_doc_path = full_doc_path.with_name("index.md")
+        continue
+        # parts = parts[:-1]
+        # doc_path = doc_path.with_name("index.md")
+        # full_doc_path = full_doc_path.with_name("index.md")
     elif parts[-1] == "__main__":
         continue
 
