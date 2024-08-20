@@ -39,14 +39,14 @@ def meta(path: str, ids: List[Union[str, int]]) -> tuple[pd.DataFrame, pd.DataFr
     path : str
         Path to metadata file
     ids : List[Union[str, int]]
-        Id label for all frames
+        Id label for each frame in pose, e.g. video id (# frames).
 
     Returns
     -------
     meta : pd.DataFrame
-        Metadata for each id (# ids x # metadata).
+        Metadata for each id (# ids, # metadata).
     meta_by_frame : pd.DataFrame
-        Metadata for each frame (# frames x # metadata).
+        Metadata for each frame (# frames, # metadata).
     """
     meta = pd.read_csv(path)
     meta_by_frame = meta.iloc[ids].reset_index().rename(columns={"index": "ids"})
@@ -77,7 +77,7 @@ def _features_mat(
         downsample - Factor by which to downsample features and IDs for analysis
 
     OUT:
-        features - Numpy array of features for each frame for analysis (frames x features)
+        features - Numpy array of features for each frame for analysis (# frames, # features)
         ids - List of labels for categories based on the exp_key
         frames_with_good_tracking - Indices in merged predictions file to keep track of downsampling
     """
@@ -139,7 +139,7 @@ def pose_mat(
     Returns
     -------
     pose : npt.NDArray
-        NumPy array (# frames x # keypoints x 3 coordinates).
+        NumPy array (# frames, # keypoints, 3 coordinates).
     """
 
     try:
@@ -278,7 +278,7 @@ def features_h5(
     Returns
     -------
     features: npt.NDArray
-        2D array of features (# frames x # features).
+        2D array of features (# frames, # features).
     labels: List[str]
         List of labels for each column of features.
     """
@@ -306,7 +306,7 @@ def pose_h5(
     Returns
     -------
     pose : npt.NDArray
-        Array of 3D pose values of shape (# frames x # keypoints x 3 coordinates).
+        Array of 3D pose values of shape (# frames, # keypoints, 3 coordinates).
     ids : npt.NDArray
         Id label for each frame in pose, e.g. video id (# frames).
     """
@@ -371,13 +371,13 @@ def pose_from_meta(
     Returns
     -------
     pose : npt.NDArray
-        Array of 3D pose values of shape (# frames x # keypoints x 3 coordinates).
+        Array of 3D pose values of shape (# frames, # keypoints, 3 coordinates).
     ids : npt.NDArray
         Id label for each frame in pose, e.g. video id (# frames).
     meta : pd.DataFrame
-        Metadata for each id (# ids x # metadata).
+        Metadata for each id (# ids, # metadata).
     meta_by_frame : pd.DataFrame
-        Metadata for each frame (# frames x # metadata).
+        Metadata for each frame (# frames, # metadata).
 
     """
     meta = pd.read_csv(path)
@@ -404,7 +404,7 @@ def dannce_mat(
     path: str,
     dtype: Optional[npt.DTypeLike] = np.float32,
 ) -> npt.NDArray:
-    """Read pose array from DANNCE[https://github.com/spoonsso/dannce] output file.
+    """Read pose array from [DANNCE](https://github.com/spoonsso/dannce) output file.
 
     Parameters
     ----------
@@ -416,7 +416,7 @@ def dannce_mat(
     Returns
     -------
     pose : npt.NDArray
-        Array of 3D pose values of shape (# frames x # keypoints x 3 coordinates).
+        Array of 3D pose values of shape (# frames, # keypoints, 3 coordinates).
     """
     mat_file = scipyloadmat(path, variable_names="pred")
     pose = np.moveaxis(mat_file["pred"], -1, -2).astype(dtype)

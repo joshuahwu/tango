@@ -4,7 +4,6 @@ Generate the code reference pages and navigation.
 The script is run by mkdocs at build time and performs the following tasks:
 
 - Generates a "reference/" folder
-- Generates a temporary "SUMMARY.md" file
 
 This allows the code reference to be built using literate navigation.
 

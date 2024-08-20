@@ -10,9 +10,9 @@ def features_h5(features: npt.ArrayLike, labels: npt.ArrayLike[str], path: str):
     Parameters
     ----------
     features : npt.ArrayLike
-        2D array of features (# frames x # features).
+        2D array of features (# frames, # features).
     labels : npt.ArrayLike[str]
-        List of labels for each column of features.
+        List of labels for features in columns of features array.
     path : str
         Path to file.
     """
@@ -31,7 +31,7 @@ def pose_h5(pose: npt.ArrayLike, ids: npt.ArrayLike[int], path: str):
     Parameters
     ----------
     pose : npt.ArrayLike
-        Array of 3D pose values of shape (# frames x # keypoints x 3 coordinates).
+        Array of 3D pose values of shape (# frames, # keypoints, 3 coordinates).
     ids : npt.ArrayLike[int]
         Id label for each frame in pose, e.g. video id (# frames).
     path : str
@@ -59,7 +59,7 @@ def pose_h5(pose: npt.ArrayLike, ids: npt.ArrayLike[int], path: str):
 #     Parameters
 #     ----------
 #     features : npt.ArrayLike
-#         Feature array (# frames x # features)
+#         Feature array (# frames, # features)
 #     labels : List[str]
 #         _description_
 #     ids : npt.ArrayLike
