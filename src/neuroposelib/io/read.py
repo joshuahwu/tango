@@ -12,17 +12,17 @@ import numpy.typing as npt
 
 
 def config(path: str) -> dict:
-    """Read configuration file and set instance attributes
+    """Read configuration `.yaml` file and set instance attributes
     based on key, value pairs in the config file.
 
     Parameters
     ----------
-    path
-        Path to configuration file.
+    path : str
+        {{path}}
 
     Returns
     -------
-    config : dict
+    config: dict
         Parameters from configuration file.
     """
     with open(path) as f:
@@ -31,22 +31,22 @@ def config(path: str) -> dict:
     return config
 
 
-def meta(path: str, ids: npt.ArrayLike[int]) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def meta(path: str, ids: List[Union[str, int]]) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Read in metadata `.csv` file.
 
     Parameters
     ----------
-    path
-        Path to metadata file.
-    ids
-        Id label for each frame in pose, e.g. video id (# frames).
+    path : str
+        {{path}}
+    ids : List[Union[str, int]]
+        {{ids}}
 
     Returns
     -------
     meta : pd.DataFrame
-        Metadata for each id (# ids, # metadata).
+        {{meta}}
     meta_by_frame : pd.DataFrame
-        Metadata for each frame (# frames, # metadata).
+        {{meta_by_frame}}
     """
     meta = pd.read_csv(path)
     meta_by_frame = meta.iloc[ids].reset_index().rename(columns={"index": "ids"})
@@ -72,7 +72,7 @@ def _features_mat(
 
     IN:
         analysis_path - Path to MATLAB analysis struct with jt_features included
-        pose_path - Path to predictions .mat file
+        pose_path - Path to predictions `.mat` file
         exp_key - Name of category to separate by experiment
         downsample - Factor by which to downsample features and IDs for analysis
 
@@ -119,6 +119,7 @@ def _features_mat(
 
     return features, ids, frames_with_good_tracking
 
+
 def pose_mat(
     path: str,
     connectivity: Connectivity,
@@ -129,16 +130,16 @@ def pose_mat(
     Parameters
     ----------
     path : str
-        Path to pose `.mat` file.
+        {{path}}
     connectivity : Connectivity
-        Connectivity object containing keypoint/joint/skeletal information.
+        {{connectivity}}
     dtype : Optional[npt.DTypeLike], optional
-        Desired data type of pose array.
+        {{dtype}}
 
     Returns
     -------
     pose : npt.NDArray
-        NumPy array (# frames, # keypoints, 3 coordinates).
+        {{pose}}
     """
 
     try:
@@ -174,14 +175,14 @@ def ids(path: str, key: str) -> npt.NDArray:
     Parameters
     ----------
     path : str
-        Path to file.
+        {{path}}
     key : str
         Key in `.mat` file for ids.
 
     Returns
     -------
     ids : npt.NDArray
-        Id label for each frame in pose, e.g. video id (# frames).
+        {{ids}}
     """
     ids = np.squeeze(hdf5storage.loadmat(path, variable_names=[key])[key].astype(int))
 
@@ -193,19 +194,19 @@ def ids(path: str, key: str) -> npt.NDArray:
 def connectivity(path: str, skeleton_name: str) -> Connectivity:
     """DEPRECATING
 
-    Reads in connectivity from skeleton.py file
+    Reads in connectivity from skeleton.py file.
 
     Parameters
     ----------
     path : str
-        Path to skeleton/connectivity Python file.
+        {{path}}
     skeleton_name : str
         Name of skeleton type to load in.
 
     Returns
     -------
     connectivity: Connectivity
-        Connectivity class object containing designated skeleton information
+        {{connectivity}}
     """
     if path.endswith(".py"):
         import importlib.util
@@ -232,12 +233,12 @@ def connectivity_config(path: str) -> Connectivity:
     Parameters
     ----------
     path : str
-        Path to file.
+        {{path}}
 
     Returns
     -------
-    connectivity : Connectivity
-        Skeleton connectivity.
+    Connectivity
+        {{connectivity}}
     """
     skeleton_config = config(path)
 
@@ -270,16 +271,16 @@ def features_h5(
     Parameters
     ----------
     path : str
-        Path to file.
+        {{path}}
     dtype : Optional[npt.DTypeLike], optional
-        Desired data type of feature array.
+        {{dtype}}
 
     Returns
     -------
-    features: npt.NDArray
-        2D array of features (# frames, # features).
-    labels: List[str]
-        List of labels for each column of features.
+    features : npt.NDArray
+        {{features}}
+    labels : List[str]
+        {{feat_labels}}
     """
     hf = h5py.File(path, "r")
     features = np.array(hf.get("features"), dtype=dtype)
@@ -298,16 +299,16 @@ def pose_h5(
     Parameters
     ----------
     path : str
-        Path to file.
+        {{path}}
     dtype : Optional[npt.DTypeLike], optional
-        Desired data type of pose array.
+        {{dtype}}
 
     Returns
     -------
     pose : npt.NDArray
-        Array of 3D pose values of shape (# frames, # keypoints, 3 coordinates).
+        {{pose}}
     ids : npt.NDArray
-        Id label for each frame in pose, e.g. video id (# frames).
+        {{ids}}
     """
     hf = h5py.File(path, "r")
     pose = np.array(hf.get("pose"), dtype=dtype)
@@ -357,26 +358,26 @@ def pose_from_meta(
     Parameters
     ----------
     path : str
-        Path to metadata file.
+        {{path}}
     connectivity : Connectivity
-        Skeleton connectivity.
+        {{connectivity}}
     key : Optional[str], optional
         Column label in metadata corresponding to individual pose file paths.
     file_type : Optional[str], optional
         Origin of file type.
     dtype : Optional[npt.DTypeLike], optional
-        Desired data type of pose array.
+        {{dtype}}
 
     Returns
     -------
     pose : npt.NDArray
-        Array of 3D pose values of shape (# frames, # keypoints, 3 coordinates).
+        {{pose}}
     ids : npt.NDArray
-        Id label for each frame in pose, e.g. video id (# frames).
+        {{ids}}
     meta : pd.DataFrame
-        Metadata for each id (# ids, # metadata).
+        {{meta}}
     meta_by_frame : pd.DataFrame
-        Metadata for each frame (# frames, # metadata).
+        {{meta_by_frame}}
 
     """
     meta = pd.read_csv(path)
@@ -408,14 +409,14 @@ def dannce_mat(
     Parameters
     ----------
     path : str
-        Path to file.
+        {{path}}
     dtype : Optional[npt.DTypeLike], optional
-        Desired data type of pose array.
+        {{dtype}}
 
     Returns
     -------
     pose : npt.NDArray
-        Array of 3D pose values of shape (# frames, # keypoints, 3 coordinates).
+        {{pose}}
     """
     mat_file = scipyloadmat(path, variable_names="pred")
     pose = np.moveaxis(mat_file["pred"], -1, -2).astype(dtype)

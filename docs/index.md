@@ -1,1 +1,3 @@
 Neuroposelib documentation
+
+{{path}}
