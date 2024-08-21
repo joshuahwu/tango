@@ -40,3 +40,6 @@ nav:
     # - Data: notes/07-data.md
     # - Open Source: notes/08-open-source.md
     # - About: about.md
+
+extra:
+  pose: "Array of 3D pose values of shape (# frames, # keypoints, 3 coordinates)."

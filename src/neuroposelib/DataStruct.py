@@ -45,7 +45,7 @@ class Connectivity:
     def _check_type(
         self,
         in_arr: Union[npt.ArrayLike, List[Tuple]],
-        dtype: npt.DTypeLike[np.float32, np.uint16],
+        dtype: npt.DTypeLike,
     ) -> npt.ArrayLike:
         """Checks the type of input and converts to NumPy array of desired data type.
 
@@ -53,7 +53,7 @@ class Connectivity:
         ----------
         in_arr : Union[npt.ArrayLike, List[Tuple]]
             Input to convert.
-        dtype : npt.DTypeLike[np.float32, np.uint16]
+        dtype : npt.DTypeLike
             Data type to which input should be converted.
 
         Returns

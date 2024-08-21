@@ -13,17 +13,17 @@ import numpy.typing as npt
 
 def config(path: str) -> dict:
     """Read configuration file and set instance attributes
-    based on key, value pairs in the config file
+    based on key, value pairs in the config file.
 
     Parameters
     ----------
-    path : str
-        Path to configuration file
+    path
+        Path to configuration file.
 
     Returns
     -------
-    config: dict
-        Parameters from configuration file
+    config : dict
+        Parameters from configuration file.
     """
     with open(path) as f:
         config = yaml.safe_load(f)
@@ -31,14 +31,14 @@ def config(path: str) -> dict:
     return config
 
 
-def meta(path: str, ids: List[Union[str, int]]) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Read in metadata file
+def meta(path: str, ids: npt.ArrayLike[int]) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Read in metadata `.csv` file.
 
     Parameters
     ----------
-    path : str
-        Path to metadata file
-    ids : List[Union[str, int]]
+    path
+        Path to metadata file.
+    ids
         Id label for each frame in pose, e.g. video id (# frames).
 
     Returns
@@ -118,7 +118,6 @@ def _features_mat(
     downsample = downsample * int(analysisstruct["tsnegranularity"])
 
     return features, ids, frames_with_good_tracking
-
 
 def pose_mat(
     path: str,
@@ -237,7 +236,7 @@ def connectivity_config(path: str) -> Connectivity:
 
     Returns
     -------
-    Connectivity
+    connectivity : Connectivity
         Skeleton connectivity.
     """
     skeleton_config = config(path)

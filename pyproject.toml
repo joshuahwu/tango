@@ -31,6 +31,7 @@ docs = [
     "mkdocs_gen_files",
     "mkdocs_literate_nav",
     "mkdocs-gallery",
+    "mkdocs-macros-plugin",
 ]
 
 [tool.setuptools_scm]

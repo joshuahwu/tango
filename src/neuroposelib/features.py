@@ -14,7 +14,7 @@ def get_lengths(pose: npt.NDArray, links: npt.ArrayLike) -> npt.NDArray:
     Parameters
     ----------
     pose : npt.NDArray
-        Array of 3D pose values of shape (# frames, # keypoints, 3 coordinates).
+        {{ pose }}
     links : npt.ArrayLike
         Indices of segment links in pose array (# segments, 2)
 

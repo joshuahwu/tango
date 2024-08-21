@@ -17,9 +17,10 @@ import time
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import dijkstra, minimum_spanning_tree
 from scipy.spatial import distance
+import numpy.typing as npt
 
 
-def get_nn_graph(X: np.ndarray, k: int = 5, weighted: bool = True):
+def get_nn_graph(X: npt.NDArray, k: int = 5, weighted: bool = True):
     X = np.ascontiguousarray(X, dtype=np.float32)
 
     # max_k = 20
@@ -74,7 +75,7 @@ def get_nn_graph(X: np.ndarray, k: int = 5, weighted: bool = True):
 
 
 def get_pose_geodesic(
-    pose: np.ndarray,
+    pose: npt.NDArray,
     graph: csr_matrix,
     START_FRAME: int,
     END_FRAME: int,
@@ -101,7 +102,7 @@ def get_pose_geodesic(
     return geodesic_pose, geodesic_indices
 
 
-def cluster_freq_from_data(data: np.ndarray, watershed: Watershed):
+def hist_cluster_by_watershed(data: npt.NDArray, watershed: Watershed):
     """
     Gets the cluster frequency of the data
     IN:
@@ -112,12 +113,11 @@ def cluster_freq_from_data(data: np.ndarray, watershed: Watershed):
     cluster_labels = watershed.predict(data)
 
     # Calculate frequencies
-    freq = cluster_freq_from_labels(cluster_labels, num_clusters)
-
+    freq = hist_cluster(cluster_labels, num_clusters)
     return freq
 
 
-def cluster_freq_from_labels(cluster_labels: np.ndarray, num_clusters: int):
+def hist_cluster(cluster_labels: npt.NDArray, num_clusters: int):
     freq = np.histogram(
         cluster_labels,
         bins=num_clusters,
@@ -126,119 +126,20 @@ def cluster_freq_from_labels(cluster_labels: np.ndarray, num_clusters: int):
     )[0]
     return freq
 
-
-def cluster_freq_by_cat(cluster_labels: np.ndarray, cat: np.ndarray):
+def hist_cluster_by_cat(cluster_labels: npt.NDArray, category: npt.NDArray):
     print("Calculating cluster occupancies ")
     num_clusters = np.max(cluster_labels) + 1
-    cat_labels = cat[np.sort(np.unique(cat, return_index=True)[1])]  # Unique cat labels
+    cat_labels = category[np.sort(np.unique(category, return_index=True)[1])]  # Unique cat labels
     freq = np.zeros((len(cat_labels), num_clusters))
     for i, label in enumerate(tqdm(cat_labels)):
         # import pdb; pdb.set_trace()
-        freq[i, :] = cluster_freq_from_labels(
-            cluster_labels[cat == label], num_clusters
+        freq[i, :] = hist_cluster(
+            cluster_labels[category == label], num_clusters
         )
 
     return freq, cat_labels
 
-
-def lstsq(freq: np.ndarray, y: np.ndarray, filepath: str):
-    print("Applying Least Squares Regression")
-    pred_y = np.zeros(y.shape)
-    for i in range(len(y)):
-        m = np.linalg.lstsq(np.delete(freq, i, axis=0), np.delete(y, i))[0]
-        pred_y[i] = freq[i, :] @ m
-
-    print("R2 Score " + str(r2_score(y, pred_y)))
-    return pred_y
-
-
-def elastic_net(freq: np.ndarray, y: np.ndarray, filepath: str):
-    print("Applying ElasticNet Regression")
-    pred_y = np.zeros(y.shape)
-    for i in range(len(y)):
-        regr = ElasticNet(alpha=0.1, l1_ratio=0.7)
-
-        temp_lesion = np.delete(freq, i, axis=0)
-        scaler = StandardScaler().fit(temp_lesion)
-
-        regr.fit(scaler.transform(temp_lesion), np.log2(np.delete(y, i)))
-        pred_y[i] = regr.predict(scaler.transform(freq[i, :][None, :]))
-
-    # sns.set(rc={'figure.figsize':(6,5)})
-    # f = plt.figure()
-    # # import pdb; pdb.set_trace()
-    # plt.plot(np.linspace(y.min(), y.max(), 100), np.linspace(y.min(),y.max(),100), markersize=0, color='k', label="y = x")
-    # plt.legend(loc="upper center")
-    # plt.scatter(y, 2**pred_y, s=30)
-    # plt.xlabel("Real Fluorescence")
-    # plt.ylabel("Predicted Fluorescence")
-    # plt.savefig("".join([filepath, "elastic.png"]))
-    # plt.close()
-
-    print("R2 Score " + str(r2_score(y, 2**pred_y)))
-    return (pred_y,)
-
-
-def elastic_net_cv(freq: np.ndarray, y: np.ndarray, filepath: str):
-    print("Applying ElasticNet Regression")
-    pred_y = np.zeros(y.shape)
-    # pred_y2 = np.zeros(y.shape)
-    for i in tqdm(range(len(y))):
-        # Predict single from the rest
-        regr = ElasticNetCV(
-            n_alphas=50, l1_ratio=[0.1, 0.5, 0.7, 0.9, 0.95, 0.99, 1], cv=10
-        )
-
-        temp_lesion = np.delete(freq, i, axis=0)
-        scaler = StandardScaler().fit(temp_lesion)
-
-        regr.fit(scaler.transform(temp_lesion), np.delete(y, i))
-        pred_y[i] = regr.predict(scaler.transform(freq[i, :][None, :]))
-        # TODO: Check convergence issue
-        # TODO: Try dropping PDb8 from r^2 calculation
-        # pred_y2[i] = regr.predict(scaler.transform(freq2[i,:][None, :]))
-
-    # sns.set(rc={'figure.figsize':(6,5)})
-    # f = plt.figure()
-    # # import pdb; pdb.set_trace()
-    # plt.plot(np.linspace(y.min(), y.max(), 100), np.linspace(y.min(),y.max(),100), markersize=0, color='k', label="y = x")
-    # plt.legend(loc="upper center")
-    # plt.scatter(y, pred_y, s=30)
-    # plt.xlabel("Real Fluorescence")
-    # plt.ylabel("Predicted Fluorescence")
-    # plt.savefig("".join([filepath, "elastic.png"]))
-    # plt.close()
-
-    # plt.plot(np.linspace(y.min(), y.max(), 100), np.linspace(y.min(),y.max(),100), markersize=0, color='k', label="y = x")
-    # plt.legend(loc="upper center")
-    # plt.scatter(y, pred_y2, s=30)
-    # plt.xlabel("Real Fluorescence")
-    # plt.ylabel("Predicted Fluorescence")
-    # plt.savefig("".join([filepath, "elastic_healthy_same_coeff.png"]))
-    # plt.close()
-
-    print("R2 Score " + str(r2_score(y, pred_y)))
-    return pred_y, r2_score(y, pred_y)
-
-
-def random_forest(freq: np.ndarray, y: np.ndarray, filepath: str):
-    print("Applying Random Forest Regression")
-    pred_y = np.zeros(y.shape)
-    for i in range(len(y)):
-        rf_regr = RandomForestRegressor()
-        rf_regr.fit(np.delete(freq, i, axis=0), np.delete(y, i))
-        pred_y[i] = rf_regr.predict(freq[i, :][None, :])
-
-    # plt.scatter(y, pred_y)
-    # plt.xlabel("Real Fluorescence")
-    # plt.ylabel("Predicted Fluorescence")
-    # plt.savefig("".join([filepath, "rforest.png"]))
-    # plt.close()
-    print("R2 Score " + str(r2_score(y, pred_y)))
-    return
-
-
-def pairwise_cosine(cluster_freq: np.ndarray, filepath: str):
+def pairwise_cosine(cluster_freq: npt.NDArray, filepath: str):
     paired_cosine = sklearn.metrics.pairwise.cosine_similarity(cluster_freq)
     paired_cosine = np.delete(paired_cosine, [30, 67], axis=0)
     paired_cosine = np.delete(paired_cosine, [30, 67], axis=1)
@@ -290,7 +191,7 @@ def pairwise_cosine(cluster_freq: np.ndarray, filepath: str):
     return paired_cosine
 
 
-def cosine_similarity(a: np.ndarray, b: np.ndarray):
+def cosine_similarity(a: npt.NDArray, b: npt.NDArray):
     """
     Row-wise cosine similarity between two 2D matrices
     """
@@ -304,12 +205,12 @@ def cosine_similarity(a: np.ndarray, b: np.ndarray):
 
 ## Calculating Jensen Shannon distance between binned segments of videos
 def bin_embed_distance(
-    values: np.ndarray,
-    meta: Union[np.ndarray, List],
-    augmentation: Union[np.ndarray, List],
+    values: npt.NDArray,
+    meta: Union[npt.NDArray, List],
+    augmentation: Union[npt.NDArray, List],
     time_bins: int = 1000,
     hist_bins: int = 100,
-    hist_range: Optional[np.ndarray] = None,
+    hist_range: Optional[npt.NDArray] = None,
 ):
     dist_js = np.zeros(len(augmentation) - 1)
     dist_med, dist_mse = np.zeros(len(dist_js)), np.zeros(len(dist_js))
@@ -379,3 +280,100 @@ def levenshtein(s1, s2):
         previous_row = current_row
 
     return previous_row[-1]
+
+
+# def lstsq(freq: npt.NDArray, y: npt.NDArray, filepath: str):
+#     print("Applying Least Squares Regression")
+#     pred_y = np.zeros(y.shape)
+#     for i in range(len(y)):
+#         m = np.linalg.lstsq(np.delete(freq, i, axis=0), np.delete(y, i))[0]
+#         pred_y[i] = freq[i, :] @ m
+
+#     print("R2 Score " + str(r2_score(y, pred_y)))
+#     return pred_y
+
+
+# def elastic_net(freq: npt.NDArray, y: npt.NDArray, filepath: str):
+#     print("Applying ElasticNet Regression")
+#     pred_y = np.zeros(y.shape)
+#     for i in range(len(y)):
+#         regr = ElasticNet(alpha=0.1, l1_ratio=0.7)
+
+#         temp_lesion = np.delete(freq, i, axis=0)
+#         scaler = StandardScaler().fit(temp_lesion)
+
+#         regr.fit(scaler.transform(temp_lesion), np.log2(np.delete(y, i)))
+#         pred_y[i] = regr.predict(scaler.transform(freq[i, :][None, :]))
+
+#     # sns.set(rc={'figure.figsize':(6,5)})
+#     # f = plt.figure()
+#     # # import pdb; pdb.set_trace()
+#     # plt.plot(np.linspace(y.min(), y.max(), 100), np.linspace(y.min(),y.max(),100), markersize=0, color='k', label="y = x")
+#     # plt.legend(loc="upper center")
+#     # plt.scatter(y, 2**pred_y, s=30)
+#     # plt.xlabel("Real Fluorescence")
+#     # plt.ylabel("Predicted Fluorescence")
+#     # plt.savefig("".join([filepath, "elastic.png"]))
+#     # plt.close()
+
+#     print("R2 Score " + str(r2_score(y, 2**pred_y)))
+#     return (pred_y,)
+
+
+# def elastic_net_cv(freq: npt.NDArray, y: npt.NDArray, filepath: str):
+#     print("Applying ElasticNet Regression")
+#     pred_y = np.zeros(y.shape)
+#     # pred_y2 = np.zeros(y.shape)
+#     for i in tqdm(range(len(y))):
+#         # Predict single from the rest
+#         regr = ElasticNetCV(
+#             n_alphas=50, l1_ratio=[0.1, 0.5, 0.7, 0.9, 0.95, 0.99, 1], cv=10
+#         )
+
+#         temp_lesion = np.delete(freq, i, axis=0)
+#         scaler = StandardScaler().fit(temp_lesion)
+
+#         regr.fit(scaler.transform(temp_lesion), np.delete(y, i))
+#         pred_y[i] = regr.predict(scaler.transform(freq[i, :][None, :]))
+#         # TODO: Check convergence issue
+#         # TODO: Try dropping PDb8 from r^2 calculation
+#         # pred_y2[i] = regr.predict(scaler.transform(freq2[i,:][None, :]))
+
+#     # sns.set(rc={'figure.figsize':(6,5)})
+#     # f = plt.figure()
+#     # # import pdb; pdb.set_trace()
+#     # plt.plot(np.linspace(y.min(), y.max(), 100), np.linspace(y.min(),y.max(),100), markersize=0, color='k', label="y = x")
+#     # plt.legend(loc="upper center")
+#     # plt.scatter(y, pred_y, s=30)
+#     # plt.xlabel("Real Fluorescence")
+#     # plt.ylabel("Predicted Fluorescence")
+#     # plt.savefig("".join([filepath, "elastic.png"]))
+#     # plt.close()
+
+#     # plt.plot(np.linspace(y.min(), y.max(), 100), np.linspace(y.min(),y.max(),100), markersize=0, color='k', label="y = x")
+#     # plt.legend(loc="upper center")
+#     # plt.scatter(y, pred_y2, s=30)
+#     # plt.xlabel("Real Fluorescence")
+#     # plt.ylabel("Predicted Fluorescence")
+#     # plt.savefig("".join([filepath, "elastic_healthy_same_coeff.png"]))
+#     # plt.close()
+
+#     print("R2 Score " + str(r2_score(y, pred_y)))
+#     return pred_y, r2_score(y, pred_y)
+
+
+# def random_forest(freq: npt.NDArray, y: npt.NDArray, filepath: str):
+#     print("Applying Random Forest Regression")
+#     pred_y = np.zeros(y.shape)
+#     for i in range(len(y)):
+#         rf_regr = RandomForestRegressor()
+#         rf_regr.fit(np.delete(freq, i, axis=0), np.delete(y, i))
+#         pred_y[i] = rf_regr.predict(freq[i, :][None, :])
+
+#     # plt.scatter(y, pred_y)
+#     # plt.xlabel("Real Fluorescence")
+#     # plt.ylabel("Predicted Fluorescence")
+#     # plt.savefig("".join([filepath, "rforest.png"]))
+#     # plt.close()
+#     print("R2 Score " + str(r2_score(y, pred_y)))
+#     return
