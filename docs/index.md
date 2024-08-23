@@ -1,3 +1,1 @@
-Neuroposelib documentation
-
-{{path}}
+neuroposelib documentation

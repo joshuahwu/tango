@@ -19,8 +19,23 @@ from scipy.sparse.csgraph import dijkstra, minimum_spanning_tree
 from scipy.spatial import distance
 import numpy.typing as npt
 
+def get_nn_graph(X: npt.NDArray, k: int = 5, weighted: bool = True) -> csr_matrix:
+    """Get nearest neighbor graph.
 
-def get_nn_graph(X: npt.NDArray, k: int = 5, weighted: bool = True):
+    Parameters
+    ----------
+    X : npt.NDArray
+        Data array (# samples, # dimensions).
+    k : int, optional
+        Number of nearest neighbors.
+    weighted : bool, optional
+        If true, returns graph with edges weighted by Euclidean distances. Otherwise, all edges are unit distance.
+
+    Returns
+    -------
+    graph : csr_matrix
+        Nearest neighbor graph.
+    """    
     X = np.ascontiguousarray(X, dtype=np.float32)
 
     # max_k = 20
@@ -73,28 +88,47 @@ def get_nn_graph(X: npt.NDArray, k: int = 5, weighted: bool = True):
 
     return nn_graph
 
-
 def get_pose_geodesic(
     pose: npt.NDArray,
     graph: csr_matrix,
-    START_FRAME: int,
-    END_FRAME: int,
-):
+    start_i: int,
+    end_i: int,
+) -> tuple[npt.NDArray, List]:
+    """Return the poses along the geodesics defined by a nearest neighbor graph.
+
+    Parameters
+    ----------
+    pose : npt.NDArray
+        Array of 3D pose values of shape (# frames, # keypoints, 3 coordinates).
+    graph : csr_matrix
+        Nearest neighbor graph.
+    start_i : int
+        Index of first pose.
+    end_i : int
+        Index of second pose.
+
+    Returns
+    -------
+    geodesic_pose : npt.NDArray
+        Frames of poses along the pose geodesic which begins with `pose[start_i]` and ends with `pose[end_i]`.
+    indices: List
+        Indices within `pose` corresponding to the pose geodesic.
+    """    
     print("Calculating Dijkstra")
     path_indices = dijkstra(
-        csgraph=graph, directed=False, indices=END_FRAME, return_predecessors=True
+        csgraph=graph, directed=False, indices=end_i, return_predecessors=True
     )[1]
 
     print("Finding pose geodesic")
     geodesic_pose, geodesic_indices = [], []
-    curr_frame = START_FRAME
+    curr_frame = start_i
 
     while path_indices[curr_frame] > 0:
         geodesic_pose += [pose[curr_frame : curr_frame + 1, ...]]
         geodesic_indices += [curr_frame]
         curr_frame = path_indices[curr_frame]
 
-    if curr_frame != END_FRAME:
+    if curr_frame != end_i:
         print("Broken graph")
 
     geodesic_pose = np.concatenate(geodesic_pose, axis=0)
@@ -102,12 +136,20 @@ def get_pose_geodesic(
     return geodesic_pose, geodesic_indices
 
 
-def hist_cluster_by_watershed(data: npt.NDArray, watershed: Watershed):
-    """
-    Gets the cluster frequency of the data
-    IN:
-        data: embedded values of data (# frames x 2)
-        watershed: Watershed object
+def hist_cluster_by_watershed(data: npt.NDArray, watershed: Watershed) -> npt.NDArray:
+    """Generates histogram of cluster assignments given 2D embedded values and a Watershed segmentation object.
+
+    Parameters
+    ----------
+    data : npt.NDArray
+        2D embedded values (# frames, 2).
+    watershed : Watershed
+        Watershed segmentation object.
+
+    Returns
+    -------
+    histogram: npt.NDArray
+        Histogram (# clusters).
     """
     num_clusters = np.max(watershed.watershed_map) + 1
     cluster_labels = watershed.predict(data)
@@ -117,7 +159,21 @@ def hist_cluster_by_watershed(data: npt.NDArray, watershed: Watershed):
     return freq
 
 
-def hist_cluster(cluster_labels: npt.NDArray, num_clusters: int):
+def hist_cluster(cluster_labels: npt.NDArray, num_clusters: int) -> npt.NDArray:
+    """Generates histograms of cluster assignments.
+
+    Parameters
+    ----------
+    cluster_labels : npt.NDArray
+        Cluster labels per frame (# frames).
+    num_clusters : int
+        Total number of clusters.
+
+    Returns
+    -------
+    histogram: npt.NDArray
+        Histogram (# clusters).
+    """    
     freq = np.histogram(
         cluster_labels,
         bins=num_clusters,
@@ -126,75 +182,103 @@ def hist_cluster(cluster_labels: npt.NDArray, num_clusters: int):
     )[0]
     return freq
 
-def hist_cluster_by_cat(cluster_labels: npt.NDArray, category: npt.NDArray):
+def hist_cluster_by_cat(cluster_labels: npt.ArrayLike, cat: npt.ArrayLike, return_labels: bool = False) -> tuple[npt.NDArray, npt.ArrayLike]:
+    """Generates histograms of cluster assignments organized by categorical label.
+
+    Parameters
+    ----------
+    cluster_labels :
+        Cluster labels per frame (# frames).
+    cat :
+        Categorical labels (# frames).
+
+    Returns
+    -------
+    histogram: npt.NDArray
+        Histogram (# categories, # clusters).
+    labels : npt.ArrayLike
+        If `return_labels == True`, returns unique labels in categories.
+    """    
     print("Calculating cluster occupancies ")
     num_clusters = np.max(cluster_labels) + 1
-    cat_labels = category[np.sort(np.unique(category, return_index=True)[1])]  # Unique cat labels
+    cat_labels = cat[np.sort(np.unique(cat, return_index=True)[1])]  # Unique cat labels
     freq = np.zeros((len(cat_labels), num_clusters))
     for i, label in enumerate(tqdm(cat_labels)):
         # import pdb; pdb.set_trace()
         freq[i, :] = hist_cluster(
-            cluster_labels[category == label], num_clusters
+            cluster_labels[cat == label], num_clusters
         )
 
-    return freq, cat_labels
+    if return_labels:
+        return freq, cat_labels
+    else:
+        return freq
 
-def pairwise_cosine(cluster_freq: npt.NDArray, filepath: str):
-    paired_cosine = sklearn.metrics.pairwise.cosine_similarity(cluster_freq)
-    paired_cosine = np.delete(paired_cosine, [30, 67], axis=0)
-    paired_cosine = np.delete(paired_cosine, [30, 67], axis=1)
-    num_subjects = int(paired_cosine.shape[0] / 2)
+# def pairwise_cosine(cluster_freq: npt.NDArray, filepath: str):
+#     paired_cosine = sklearn.metrics.pairwise.cosine_similarity(cluster_freq)
+#     paired_cosine = np.delete(paired_cosine, [30, 67], axis=0)
+#     paired_cosine = np.delete(paired_cosine, [30, 67], axis=1)
+#     num_subjects = int(paired_cosine.shape[0] / 2)
 
-    labels = ["B " + str(i) for i in range(num_subjects)]
-    labels += ["L " + str(i) for i in range(num_subjects)]
-    # pair_cos_df = pd.DataFrame(paired_cosine, index = labels, columns = labels)
-    # sns.set(rc={'figure.figsize':(12,10)})
-    # ax = sns.heatmap(pair_cos_df,cmap = sns.color_palette("mako",as_cmap=True))
-    # ax.set_aspect('equal','box')
-    # ax.figure.savefig("".join([filepath,"pairwise_cosine.png"]))
-    # plt.close()
-    palette = ["#00b7c7", "#dc0ab4"]
-    tri_ind = np.triu_indices(num_subjects, 1)
+#     labels = ["B " + str(i) for i in range(num_subjects)]
+#     labels += ["L " + str(i) for i in range(num_subjects)]
+#     # pair_cos_df = pd.DataFrame(paired_cosine, index = labels, columns = labels)
+#     # sns.set(rc={'figure.figsize':(12,10)})
+#     # ax = sns.heatmap(pair_cos_df,cmap = sns.color_palette("mako",as_cmap=True))
+#     # ax.set_aspect('equal','box')
+#     # ax.figure.savefig("".join([filepath,"pairwise_cosine.png"]))
+#     # plt.close()
+#     palette = ["#00b7c7", "#dc0ab4"]
+#     tri_ind = np.triu_indices(num_subjects, 1)
 
-    sns.set(rc={"figure.figsize": (6, 5)})
-    cond_1 = paired_cosine[:num_subjects, :num_subjects][tri_ind]
-    cond_2 = paired_cosine[num_subjects:, num_subjects:][tri_ind]
+#     sns.set(rc={"figure.figsize": (6, 5)})
+#     cond_1 = paired_cosine[:num_subjects, :num_subjects][tri_ind]
+#     cond_2 = paired_cosine[num_subjects:, num_subjects:][tri_ind]
 
-    data = np.append(cond_1, cond_2)
-    labels = np.empty(data.shape, dtype=object)
-    labels[: len(cond_1)] = "Baseline"
-    labels[len(cond_1) :] = "Lesion"
-    inner_cos_df = pd.DataFrame(data, columns=["Pairwise Cosine Similarity"])
-    inner_cos_df["Condition"] = labels
-    ax = sns.catplot(
-        data=inner_cos_df,
-        y="Pairwise Cosine Similarity",
-        x="Condition",
-        kind="violin",
-        errorbar="se",
-        palette=palette,
-        alpha=0.1,
-    )
+#     data = np.append(cond_1, cond_2)
+#     labels = np.empty(data.shape, dtype=object)
+#     labels[: len(cond_1)] = "Baseline"
+#     labels[len(cond_1) :] = "Lesion"
+#     inner_cos_df = pd.DataFrame(data, columns=["Pairwise Cosine Similarity"])
+#     inner_cos_df["Condition"] = labels
+#     ax = sns.catplot(
+#         data=inner_cos_df,
+#         y="Pairwise Cosine Similarity",
+#         x="Condition",
+#         kind="violin",
+#         errorbar="se",
+#         palette=palette,
+#         alpha=0.1,
+#     )
 
-    ax.map_dataframe(
-        sns.stripplot,
-        x="Condition",
-        y="Pairwise Cosine Similarity",
-        palette=["#404040"],
-        s=2,
-        alpha=0.6,
-        jitter=0.3,
-    )
-    ax.figure.savefig("".join([filepath, "pair_cos_violin.png"]))
-    plt.close()
+#     ax.map_dataframe(
+#         sns.stripplot,
+#         x="Condition",
+#         y="Pairwise Cosine Similarity",
+#         palette=["#404040"],
+#         s=2,
+#         alpha=0.6,
+#         jitter=0.3,
+#     )
+#     ax.figure.savefig("".join([filepath, "pair_cos_violin.png"]))
+#     plt.close()
 
-    return paired_cosine
+#     return paired_cosine
 
 
 def cosine_similarity(a: npt.NDArray, b: npt.NDArray):
-    """
-    Row-wise cosine similarity between two 2D matrices
-    """
+    """Row-wise cosine similarity between two 2D matrices. `a` and `b` must match in shape.
+
+    Parameters
+    ----------
+    a : npt.NDArray
+    b : npt.NDArray
+
+    Returns
+    -------
+    cosine_similarity
+        Cosine similarity between each row of a and b.
+    """    
     norm_a = np.linalg.norm(a, axis=1)
     norm_b = np.linalg.norm(b, axis=1)
     # import pdb; pdb.set_trace()
@@ -202,16 +286,36 @@ def cosine_similarity(a: npt.NDArray, b: npt.NDArray):
 
     return cos_sim
 
-
-## Calculating Jensen Shannon distance between binned segments of videos
-def bin_embed_distance(
+def _bin_embed_distance(
     values: npt.NDArray,
-    meta: Union[npt.NDArray, List],
-    augmentation: Union[npt.NDArray, List],
+    meta: npt.ArrayLike,
+    augmentation: npt.ArrayLike,
     time_bins: int = 1000,
     hist_bins: int = 100,
     hist_range: Optional[npt.NDArray] = None,
 ):
+    """Calculating Jensen Shannon distance between binned segments of videos
+
+    Parameters
+    ----------
+    values : npt.NDArray
+        _description_
+    meta : npt.ArrayLike
+        _description_
+    augmentation : npt.ArrayLike
+        _description_
+    time_bins : int, optional
+        _description_, by default 1000
+    hist_bins : int, optional
+        _description_, by default 100
+    hist_range : Optional[npt.NDArray], optional
+        _description_, by default None
+
+    Returns
+    -------
+    _type_
+        _description_
+    """    
     dist_js = np.zeros(len(augmentation) - 1)
     dist_med, dist_mse = np.zeros(len(dist_js)), np.zeros(len(dist_js))
     for i in range(len(augmentation)):
@@ -256,9 +360,22 @@ def bin_embed_distance(
     return dist_js  # , dist_mse, dist_med
 
 
-def levenshtein(s1, s2):
-    """
-    From https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
+def levenshtein(s1: npt.ArrayLike, s2: npt.ArrayLike):
+    """Levenshtein edit distance between two sequences.
+
+    From [Wikipedia](https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python).
+
+    Parameters
+    ----------
+    s1 : npt.ArrayLike
+        Sequence 1.
+    s2 : npt.ArrayLike
+        Sequence 2.
+
+    Returns
+    -------
+    distance : int
+        Number of insertions, deletions, and substitutions to convert `s1` to `s2`.
     """
     if len(s1) < len(s2):
         return levenshtein(s2, s1)
