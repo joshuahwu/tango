@@ -4,14 +4,14 @@ from typing import Union, Type, Optional, List
 import numpy.typing as npt
 
 
-def features_h5(features: npt.ArrayLike, labels: npt.ArrayLike[str], path: str):
+def features_h5(features: npt.ArrayLike, labels: npt.ArrayLike, path: str):
     """Writes features and labels to `.h5` file.
 
     Parameters
     ----------
     features : npt.ArrayLike
         2D array of features (# frames, # features).
-    labels : npt.ArrayLike[str]
+    labels : npt.ArrayLike
         List of labels for features in columns of features array.
     path : str
         Path to file.
@@ -25,14 +25,14 @@ def features_h5(features: npt.ArrayLike, labels: npt.ArrayLike[str], path: str):
     return
 
 
-def pose_h5(pose: npt.ArrayLike, ids: npt.ArrayLike[int], path: str):
+def pose_h5(pose: npt.ArrayLike, ids: npt.ArrayLike, path: str):
     """Writes poses to `.h5` file.
 
     Parameters
     ----------
     pose : npt.ArrayLike
         Array of 3D pose values of shape (# frames, # keypoints, 3 coordinates).
-    ids : npt.ArrayLike[int]
+    ids : npt.ArrayLike
         Id label for each frame in pose, e.g. video id (# frames).
     path : str
         Path to file.

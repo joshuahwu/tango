@@ -31,10 +31,10 @@ def get_lengths(pose: npt.NDArray, links: npt.ArrayLike) -> npt.NDArray:
 
 def get_velocities(
     pose: npt.NDArray,
-    ids: npt.ArrayLike[int],
+    ids: npt.ArrayLike,
     joint_names: List[str],
-    joints: npt.ArrayLike[int] = [0, 3, 5],
-    widths: npt.ArrayLike[int] = [3, 31, 89],
+    joints: npt.ArrayLike = [0, 3, 5],
+    widths: npt.ArrayLike = [3, 31, 89],
     abs_val: bool = False,
     fs: int = 90,
     std: bool = True,
@@ -47,13 +47,13 @@ def get_velocities(
     ----------
     pose : npt.NDArray
         Array of 3D pose values of shape (# frames, # keypoints, 3 coordinates).
-    ids : npt.ArrayLike[int]
+    ids : npt.ArrayLike
         Id label for each frame in pose, e.g. video id (# frames).
     joint_names : List[str]
         List of labels for keypoints/joints ordered by the indices in the pose array.
-    joints : npt.ArrayLike[int], optional
+    joints : npt.ArrayLike, optional
         Keypoints/joints for which to calculate speed.
-    widths : npt.ArrayLike[int], optional
+    widths : npt.ArrayLike, optional
         Size of windows for average speed calculation (must be odd).
     abs_val : bool, optional
         If True, will output the absolute value of the per frame displacement.
@@ -274,8 +274,8 @@ def get_angles(
 def get_angular_vel(
     angles: npt.NDArray,
     angle_labels: List[str],
-    ids: npt.ArrayLike[int],
-    widths: npt.ArrayLike[int] = [1, 15, 45],
+    ids: npt.ArrayLike,
+    widths: npt.ArrayLike = [1, 15, 45],
     fs: int = 90,
 ) -> tuple[npt.NDArray, List[str]]:
     """Calculates angular velocity of an angular velocity array and standard deviation of velocities over defined windows.
@@ -286,9 +286,9 @@ def get_angular_vel(
         Array of angle features per frame (# frames, # angles)
     angle_labels: List[str]]
         List of labels for angle features in columns of angles array.
-    ids : npt.ArrayLike[int]
+    ids : npt.ArrayLike
         Id label for each frame in pose, e.g. video id (# frames).
-    widths : widths : npt.ArrayLike[int], optional
+    widths : widths : npt.ArrayLike, optional
         Size of windows for average speed calculation (must be odd).
     fs : int, optional
         Frame rate per second.
@@ -338,9 +338,9 @@ def get_angular_vel(
 
 def _get_head_angular(
     pose: npt.NDArray,
-    ids: npt.ArrayLike[int],
-    widths: npt.ArrayLike[int] = [5, 10, 50],
-    link: npt.ArrayLike[int] = [0, 3, 4],
+    ids: npt.ArrayLike,
+    widths: npt.ArrayLike = [5, 10, 50],
+    link: npt.ArrayLike = [0, 3, 4],
 ) -> npt.NDArray:
     """_summary_
 
@@ -348,11 +348,11 @@ def _get_head_angular(
     ----------
     pose : npt.NDArray
         _description_
-    ids : npt.ArrayLike[int]
+    ids : npt.ArrayLike
         _description_
-    widths : npt.ArrayLike[int], optional
+    widths : npt.ArrayLike, optional
         _description_, by default [5, 10, 50]
-    link : npt.ArrayLike[int], optional
+    link : npt.ArrayLike, optional
         _description_, by default [0, 3, 4]
 
     Returns
@@ -385,7 +385,7 @@ def _get_head_angular(
 def wavelet(
     features: npt.NDArray,
     labels: List[str],
-    ids: npt.ArrayLike[int],
+    ids: npt.ArrayLike,
     fs: int = 90,
     freq: npt.ArrayLike = np.geomspace(1, 25, 25),
     bw: float = 1.0,
@@ -400,7 +400,7 @@ def wavelet(
         2D array of features (# frames, # features).
     labels : List[str]
         List of labels for features in columns of features array.
-    ids : npt.ArrayLike[int]
+    ids : npt.ArrayLike
         Id label for each frame in pose, e.g. video id (# frames).
     fs : int, optional
         Frame rate per second.

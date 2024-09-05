@@ -316,6 +316,10 @@ def pose_h5(
         ids = np.array(hf.get("ids"), dtype=np.int16)
         hf.close()
         return pose, ids
+    elif "id" in hf.keys():
+        ids = np.array(hf.get("id"), dtype=np.int16)
+        hf.close()
+        return pose, ids
     else:
         hf.close()
         return pose

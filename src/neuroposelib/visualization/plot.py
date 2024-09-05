@@ -14,7 +14,7 @@ from scipy.special import softmax
 
 from neuroposelib import DataStruct as ds
 from neuroposelib.embed import Watershed, GaussDensity
-from neuroposelib.analysis import cluster_freq_by_cat
+from neuroposelib.analysis import hist_cluster_by_cat
 from neuroposelib.visualization.constants import PALETTE, EPS, DEFAULT_VIRIDIS
 
 
@@ -387,7 +387,7 @@ def cluster_freq(data_obj: ds.DataStruct, cat1, cat2, filepath="./", show=False)
         ["_".join([label1, label2]) for label1, label2 in zip(cat1_labels, cat2_labels)]
     )
 
-    freq, combined_keys = cluster_freq_by_cat(
+    freq, combined_keys = hist_cluster_by_cat(
         data_obj.data["Cluster"].values, cat=combined_labels
     )
 
@@ -489,7 +489,7 @@ def cluster_freq_cond(data_obj: ds.DataStruct, cat1, cat2, filepath="./", show=F
         ["_".join([label1, label2]) for label1, label2 in zip(cat1_labels, cat2_labels)]
     )
 
-    freq, combined_keys = cluster_freq_by_cat(
+    freq, combined_keys = hist_cluster_by_cat(
         data_obj.data["Cluster"].values, cat=combined_labels
     )
 
