@@ -435,6 +435,7 @@ def _pose3D_arena(
     title: Optional[str] = None,
 ):
     (rows, cols) = size
+    import pdb; pdb.set_trace()
     kpts_3d = np.reshape(data[frames, :, :], (len(frames) * data.shape[-2], 3))
 
     ax_3d = _pose3D_frame(

@@ -128,6 +128,8 @@ def get_pose_geodesic(
         geodesic_indices += [curr_frame]
         curr_frame = path_indices[curr_frame]
 
+    geodesic_pose += [pose[end_i: end_i + 1, ...]]
+    geodesic_indices += [end_i]
     if curr_frame != end_i:
         print("Broken graph")
 

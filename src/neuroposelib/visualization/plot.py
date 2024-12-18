@@ -92,15 +92,18 @@ def scatter(
 def watershed(
     ws_map: np.ndarray,
     ws_borders: Optional[np.ndarray] = None,
+    cmap: Optional[str] = None,
     filepath: str = "./results/watershed.png",
 ):
     """
     Plotting a watershed map with clusters colored
 
     """
+    if cmap == None:
+        cmap = DEFAULT_VIRIDIS
     f = plt.figure()
     ax = f.add_subplot(111)
-    ax.imshow(ws_map, vmin=EPS, cmap=DEFAULT_VIRIDIS)
+    ax.imshow(ws_map, vmin=EPS, cmap=cmap)
     ax.set_aspect(0.9)
     if ws_borders is not None:
         ax.plot(ws_borders[:, 0], ws_borders[:, 1], ".k", markersize=0.05)
@@ -210,7 +213,7 @@ def density(
     ws_borders: Optional[np.ndarray] = None,
     filepath: str = "./results/density.png",
     show: bool = False,
-    vmax: float = 3.5,
+    vmax: float = None,
 ):
     vmin = 0.99 * 15/density.shape[0]**2
     f = plt.figure()
@@ -218,7 +221,6 @@ def density(
     if ws_borders is not None:
         ax.plot(ws_borders[:, 0], ws_borders[:, 1], ".k", markersize=0.1)
 
-    # import pdb; pdb.set_trace()
     ax.imshow(density, vmin=vmin, vmax=vmax, cmap=DEFAULT_VIRIDIS)
     ax.set_xticks([])
     ax.set_yticks([])
@@ -243,7 +245,7 @@ def density_cat(
     watershed: Watershed,
     filepath: str = "./results/density_by_label.png",
     show: bool = False,
-    vmax: float = 3.5,
+    vmax: float = None,
 ):
     """
     Plot densities by a category label
@@ -280,6 +282,8 @@ def density_cat(
             )
         ax.set_aspect(0.9)
         ax.set_title(label)
+
+    for ax in ax_arr.reshape(-1):
         ax.set_xticks([])
         ax.set_yticks([])
         ax.axis("off")
