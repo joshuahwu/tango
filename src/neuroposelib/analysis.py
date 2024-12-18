@@ -12,81 +12,81 @@ from sklearn.metrics import r2_score
 from sklearn.ensemble import RandomForestRegressor
 import seaborn as sns
 from neuroposelib.embed import Watershed
-import faiss
+# import faiss
 import time
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import dijkstra, minimum_spanning_tree
 from scipy.spatial import distance
 import numpy.typing as npt
 
-def get_nn_graph(X: npt.NDArray, k: int = 5, weighted: bool = True) -> csr_matrix:
-    """Get nearest neighbor graph.
+# def get_nn_graph(X: npt.NDArray, k: int = 5, weighted: bool = True) -> csr_matrix:
+#     """Get nearest neighbor graph.
 
-    Parameters
-    ----------
-    X : npt.NDArray
-        Data array (# samples, # dimensions).
-    k : int, optional
-        Number of nearest neighbors.
-    weighted : bool, optional
-        If true, returns graph with edges weighted by Euclidean distances. Otherwise, all edges are unit distance.
+#     Parameters
+#     ----------
+#     X : npt.NDArray
+#         Data array (# samples, # dimensions).
+#     k : int, optional
+#         Number of nearest neighbors.
+#     weighted : bool, optional
+#         If true, returns graph with edges weighted by Euclidean distances. Otherwise, all edges are unit distance.
 
-    Returns
-    -------
-    graph : csr_matrix
-        Nearest neighbor graph.
-    """    
-    X = np.ascontiguousarray(X, dtype=np.float32)
+#     Returns
+#     -------
+#     graph : csr_matrix
+#         Nearest neighbor graph.
+#     """    
+#     X = np.ascontiguousarray(X, dtype=np.float32)
 
-    # max_k = 20
-    print("Building NN Graph")
-    start_time = time.time()
-    index = faiss.IndexFlatL2(X.shape[1])
-    index.add(X)
-    distances, indices = index.search(X, k=k + 1)
-    distances, indices = distances[:, 1:], indices[:, 1:]
-    row = np.tile(np.arange(X.shape[0])[:, None], k)
+#     # max_k = 20
+#     print("Building NN Graph")
+#     start_time = time.time()
+#     index = faiss.IndexFlatL2(X.shape[1])
+#     index.add(X)
+#     distances, indices = index.search(X, k=k + 1)
+#     distances, indices = distances[:, 1:], indices[:, 1:]
+#     row = np.tile(np.arange(X.shape[0])[:, None], k)
 
-    # min_distances, min_indices = distances[:, :k], indices[:,:k]
-    # min_row = row = np.tile(np.arange(X.shape[0])[:, None], k)
-    if weighted:
-        nn_graph = csr_matrix(
-            (distances.flatten(), (row.flatten(), indices.flatten())),
-            shape=(X.shape[0], X.shape[0]),
-        )
+#     # min_distances, min_indices = distances[:, :k], indices[:,:k]
+#     # min_row = row = np.tile(np.arange(X.shape[0])[:, None], k)
+#     if weighted:
+#         nn_graph = csr_matrix(
+#             (distances.flatten(), (row.flatten(), indices.flatten())),
+#             shape=(X.shape[0], X.shape[0]),
+#         )
 
-        # min_graph = csr_matrix(
-        #     (min_distances.flatten(), (min_row.flatten(), min_indices.flatten())),
-        #     shape=(X.shape[0], X.shape[0]),
-        # )
-    else:
-        nn_graph = csr_matrix(
-            (np.ones(distances.flatten().shape), (row.flatten(), indices.flatten())),
-            shape=(X.shape[0], X.shape[0]),
-        )
-    #     min_graph = csr_matrix(
-    #         (np.ones(min_distances.flatten()), (min_row.flatten(), min_indices.flatten())),
-    #         shape=(X.shape[0], X.shape[0]),
-    #     )
+#         # min_graph = csr_matrix(
+#         #     (min_distances.flatten(), (min_row.flatten(), min_indices.flatten())),
+#         #     shape=(X.shape[0], X.shape[0]),
+#         # )
+#     else:
+#         nn_graph = csr_matrix(
+#             (np.ones(distances.flatten().shape), (row.flatten(), indices.flatten())),
+#             shape=(X.shape[0], X.shape[0]),
+#         )
+#     #     min_graph = csr_matrix(
+#     #         (np.ones(min_distances.flatten()), (min_row.flatten(), min_indices.flatten())),
+#     #         shape=(X.shape[0], X.shape[0]),
+#     #     )
 
-    print("NN Time: " + str(time.time() - start_time))
+#     print("NN Time: " + str(time.time() - start_time))
 
-    # # Get minimum spanning tree to ensure full connectivity in graph
-    # start_time = time.time()
-    # min_span_tree = minimum_spanning_tree(nn_graph)
-    # min_span_tree.data = min_span_tree.data.astype(X.dtype)
-    # print("Minimum Spanning Tree Time: " + str(time.time() - start_time))
+#     # # Get minimum spanning tree to ensure full connectivity in graph
+#     # start_time = time.time()
+#     # min_span_tree = minimum_spanning_tree(nn_graph)
+#     # min_span_tree.data = min_span_tree.data.astype(X.dtype)
+#     # print("Minimum Spanning Tree Time: " + str(time.time() - start_time))
 
-    # # Get union between minimum spanning tree and nn graph
-    # min_span_tree_insert = min_span_tree - nn_graph
-    # min_span_tree_insert.data = np.where(min_span_tree_insert.data < 0, 1, 0)
-    # graph = (
-    #     min_span_tree
-    #     - min_span_tree.multiply(min_span_tree_insert)
-    #     + nn_graph.multiply(min_span_tree_insert)
-    # )
+#     # # Get union between minimum spanning tree and nn graph
+#     # min_span_tree_insert = min_span_tree - nn_graph
+#     # min_span_tree_insert.data = np.where(min_span_tree_insert.data < 0, 1, 0)
+#     # graph = (
+#     #     min_span_tree
+#     #     - min_span_tree.multiply(min_span_tree_insert)
+#     #     + nn_graph.multiply(min_span_tree_insert)
+#     # )
 
-    return nn_graph
+#     return nn_graph
 
 def get_pose_geodesic(
     pose: npt.NDArray,

@@ -4,7 +4,7 @@ import time
 
 from neuroposelib import DataStruct as ds
 from typing import Optional, Union, List
-import faiss
+# import faiss
 import tqdm
 
 # import matplotlib.pyplot as plt
@@ -362,67 +362,67 @@ class BatchEmbed(Embed):
         return self
 
 
-class KNNGraph:
-    """
-    Using faiss to run k-Nearest Neighbors algorithm
-    """
+# class KNNGraph:
+#     """
+#     Using faiss to run k-Nearest Neighbors algorithm
+#     """
 
-    def __init__(self, k: int = 5):
-        """
-        Creates data structure for fast search of neighbors
-        IN:
-            X - Features of training data
-            y - Training data
-        """
-        self.k = k
+#     def __init__(self, k: int = 5):
+#         """
+#         Creates data structure for fast search of neighbors
+#         IN:
+#             X - Features of training data
+#             y - Training data
+#         """
+#         self.k = k
 
-    def fit(self, X):
-        self.index = faiss.IndexFlatL2(X.shape[1])
-        self.index.add(np.ascontiguousarray(X, dtype=np.float32))
+#     def fit(self, X):
+#         self.index = faiss.IndexFlatL2(X.shape[1])
+#         self.index.add(np.ascontiguousarray(X, dtype=np.float32))
 
-        return self
+#         return self
 
 
-class KNNEmbed(KNNGraph):
-    """
-    Using faiss to run k-Nearest Neighbors algorithm for embedding of points in 2D
-    when given high-D data and low-D embedding of template data
-    """
+# class KNNEmbed(KNNGraph):
+#     """
+#     Using faiss to run k-Nearest Neighbors algorithm for embedding of points in 2D
+#     when given high-D data and low-D embedding of template data
+#     """
 
-    def __init__(self, k: int = 5):
-        super().init(k)
-        self.distances = None
-        self.indices = None
+#     def __init__(self, k: int = 5):
+#         super().init(k)
+#         self.distances = None
+#         self.indices = None
 
-    def predict_x(self, X, y, weights="standard"):
-        """
-        Predicts embedding of data using KNN
-        IN:
-            X - Features of data to predict
-            weights - 'standard' or 'distance' determines weights on nearest neighbors
-        OUT:
-            predictions - output predictions
-        """
-        print("Predicting")
-        distances, indices = self.index.search(
-            np.ascontiguousarray(X, dtype=np.float32), k=self.k
-        )
-        y = np.ascontiguousarray(y, dtype=np.float32)
-        votes = self.y[indices]
+#     def predict_x(self, X, y, weights="standard"):
+#         """
+#         Predicts embedding of data using KNN
+#         IN:
+#             X - Features of data to predict
+#             weights - 'standard' or 'distance' determines weights on nearest neighbors
+#         OUT:
+#             predictions - output predictions
+#         """
+#         print("Predicting")
+#         distances, indices = self.index.search(
+#             np.ascontiguousarray(X, dtype=np.float32), k=self.k
+#         )
+#         y = np.ascontiguousarray(y, dtype=np.float32)
+#         votes = self.y[indices]
 
-        if weights == "distance":
-            min_dist = np.min(distances[np.nonzero(distances)]) / 2
-            distances = np.clip(distances, min_dist, None)
-            weights = 1 / distances
-            weights = weights / np.repeat(
-                np.expand_dims(np.sum(weights, axis=1), axis=1), self.k, axis=1
-            )
-        else:
-            weights = 1 / self.k
+#         if weights == "distance":
+#             min_dist = np.min(distances[np.nonzero(distances)]) / 2
+#             distances = np.clip(distances, min_dist, None)
+#             weights = 1 / distances
+#             weights = weights / np.repeat(
+#                 np.expand_dims(np.sum(weights, axis=1), axis=1), self.k, axis=1
+#             )
+#         else:
+#             weights = 1 / self.k
 
-        weights = np.repeat(np.expand_dims(weights, axis=2), 2, axis=2)
-        predictions = np.sum(votes * weights, axis=1)
-        return predictions
+#         weights = np.repeat(np.expand_dims(weights, axis=2), 2, axis=2)
+#         predictions = np.sum(votes * weights, axis=1)
+#         return predictions
 
 
 class GaussDensity:
