@@ -4,16 +4,21 @@ channels:
 
 dependencies:
   - python=3.10
-  - numpy=1.23
-  - faiss-cpu=1.6.5
-  - matplotlib
-  - seaborn
-  - hdf5storage
-  - umap-learn
-  - numba
-  - scikit-image=0.19
-  - cython=3.0
-  - fftw=3.3
-  - pandas
   - fbpca
+  - faiss-cpu=1.8.0
+  - scikit-image=0.24.0
+  - cython=3.0
+  - umap-learn=0.5.7
+  - numpy=1.26.4
+  - hdf5storage
+  - pandas
+  - numba=0.60.0
+  - matplotlib
+  - fftw=3.3
   - ffmpeg=4.2
+  - numpy=1.26
+  # - pandas
+  # - pywavelets
+  # - numpy #=1.23
+  # - matplotlib
+  # - numba
